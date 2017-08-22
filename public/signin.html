@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="../m_logo.png">
+
+    <title>Map My Travels</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Alfa+Slab+One|Cabin+Sketch|Kaushan+Script" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="../style/cover.css" rel="stylesheet">
+    <link href="../style/signin.css" rel="stylesheet">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+
+  </head>
+
+  <body>
+
+    <div class="site-wrapper">
+
+      <div class="site-wrapper-inner">
+
+        <div class="cover-container">
+
+          <div class="masthead clearfix">
+            <div class="inner">
+              <h3 class="masthead-brand">Map My Travels</h3>
+              <nav>
+                <ul class="nav masthead-nav">
+                  <li><a href="/">Home</a></li>
+                  <li class="active"><a href="#">Sign In</a></li>
+                  <li><a href="/showSignUpPage">Sign Up</a></li>
+                </ul>
+              </nav>
+            </div>
+          </div>
+
+           <div class="inner cover">
+              <form class="form-signin" action="/verifyuser" method="post">
+                <h2 class="form-signin-heading">Please sign in</h2>
+                <label for="inputEmail" class="sr-only">Email address</label>
+                <input type="email" id="inputEmail" name="inputEmail" class="form-control" placeholder="Email address" required="" autofocus="">
+                <label for="inputPassword" class="sr-only">Password</label>
+                <input type="password" id="inputPassword" name="inputPassword" class="form-control" placeholder="Password" required="">
+
+                <button id="btnSignIn" class="btn btn-lg btn-primary btn-block" type="submit">Log In</button>
+              </form>
+          </div>
+
+          <div class="mastfoot">
+            <div class="inner">
+              <p>Map My Travels, by <a>Kevin Irace</a>.</p>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+  </body>
+</html>

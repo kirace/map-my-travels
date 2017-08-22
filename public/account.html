@@ -1,0 +1,204 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <link rel="icon" href="/m_logo.png">
+
+  <title>Map My Travels</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="../node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom styles for this template -->
+  <link href="https://fonts.googleapis.com/css?family=Alfa+Slab+One|Cabin+Sketch|Kaushan+Script" rel="stylesheet">
+  <script src='https://api.mapbox.com/mapbox-gl-js/v0.38.0/mapbox-gl.js'></script>
+  <link href='https://api.mapbox.com/mapbox-gl-js/v0.38.0/mapbox-gl.css' rel='stylesheet'/>
+  <link rel="stylesheet" href="../style/account.css">
+</head>
+
+<body>
+  <div class="masthead">
+      <h3 class="masthead-brand">Map My Travels</h3>
+      <nav>
+        <ul class="nav masthead-nav">
+          <li class="active"><a href="/">Log Out</a></li>
+        </ul>
+      </nav>
+  </div>
+
+  <div id='map'></div>
+
+  <div style="text-align:center;">
+      <button id="saveButton" onclick="toggleEdit()">Edit Your Map</button>
+  </div>
+
+  <div id="editCountry">
+    <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for countries or territories..">
+    <ul id="myUL">
+    </ul>
+  </div>
+
+  <div class="mastfoot">
+    <div class="inner">
+      <p>Map My Travels, by <a>Kevin Irace</a>.</p>
+    </div>
+  </div>
+
+  <script>
+
+      var countries = ['Afghanistan', 'Aland Islands', 'Albania','Algeria','American Samoa','Andorra','Angola','Anguilla','Antarctica','Antigua and Barbuda','Argentina','Armenia','Aruba',
+                        'Australia','Austria','Azerbaijan','Bahamas','Bahrain','Bangladesh','Barbados','Belarus','Belgium','Belize','Benin','Bermuda',
+                        'Bhutan','Bolivia','Bosnia and Herzegovina','Botswana','Bouvet Island','Brazil','British Virgin Islands','Brunei','Bulgaria','Burkina Faso',
+                        'Burundi','Cambodia','Cameroon','Canada','Cape Verde','Cayman Islands','Central African Republic','Chad','Chile','China','Hong Kong',
+                        'Macao','Christmas Island','Cocos Islands','Colombia','Comoros','Democratic Republic of the Congo','Republic of the Congo','Cook Islands',
+                        'Costa Rica',"Côte d'Ivoire",'Croatia','Cuba','Cyprus','Czech Republic','Denmark','Djibouti','Dominica','Dominican Republic',
+                        'Ecuador','Egypt','El Salvador','Equatorial Guinea','Eritrea','Estonia','Ethiopia','Falkland Islands','Faroe Islands',
+                        'Fiji','Finland','France','French Guiana','French Polynesia','Gabon','Gambia','Georgia','Germany','Ghana','Gibraltar',
+                        'Greece','Greenland','Grenada','Guadeloupe','Guam','Guatemala','Guinea','Guinea-Bissau','Guyana','Haiti',
+                        'Honduras','Hungary','Iceland','India','Indonesia','Iran','Iraq','Ireland','Isle of Man','Israel','Italy','Jamaica','Japan',
+                        'Jersey','Jordan','Kazakhstan','Kenya','Kiribati','North Korea','South Korea','Kuwait','Kyrgyzstan','Laos','Latvia','Lebanon',
+                        'Lesotho','Liberia','Libya','Liechtenstein','Lithuania','Luxembourg','Macedonia','Madagascar','Malawi','Malaysia','Maldives',
+                        'Mali','Malta','Marshall Islands','Martinique','Mauritania','Mauritius','Mexico','Micronesia','Moldova','Monaco','Mongolia',
+                        'Montenegro','Montserrat','Morocco','Mozambique','Myanmar','Namibia','Nauru','Nepal','Netherlands','New Caledonia','New Zealand',
+                        'Nicaragua','Niger','Nigeria','Northern Mariana Islands','Norway','Oman','Pakistan','Palau','Palestinian Territory','Panama',
+                        'Papua New Guinea','Paraguay','Peru','Philippines','Pitcairn','Poland','Portugal','Puerto Rico','Qatar','Réunion','Romania','Russia',
+                        'Rwanda','Saint-Barthélemy','Saint Helena','Saint Kitts and Nevis','Saint Lucia','Saint-Martin (French)','Saint Pierre and Miquelon',
+                        'Saint Vincent and Grenadines','Samoa','San Marino','Sao Tome and Principe','Saudi Arabia','Senegal','Serbia','Seychelles',
+                        'Sierra Leone','Singapore','Slovakia','Slovenia','Solomon Islands','Somalia','South Africa','South Georgia and the South Sandwich Islands',
+                        'South Sudan','Spain','Sri Lanka','Sudan','Suriname','Svalbard and Jan Mayen Islands','Swaziland','Sweden','Switzerland','Syria',
+                        'Taiwan','Tajikistan','Tanzania','Thailand','Timor-Leste','Togo','Tokelau','Tonga','Trinidad and Tobago','Tunisia','Turkey',
+                        'Turkmenistan','Turks and Caicos Islands','Tuvalu','Uganda','Ukraine','United Arab Emirates','United Kingdom','United States of America','Uruguay',
+                        'Uzbekistan','Vanuatu','Venezuela', 'Vietnam', 'Virgin Islands, US', 'Wallis and Futuna Islands', 'Western Sahara', 'Yemen', 'Zambia', 'Zimbabwe'];
+
+      mapboxgl.accessToken = 'pk.eyJ1Ijoia2V2aW5pcmFjZSIsImEiOiJjajY0M2ExZDIxbm1hMzNwOHp0cWpzbjJkIn0.g_KHQKSe60ViArp6hW-2TA';
+      var map = new mapboxgl.Map({
+          container: 'map',
+          style: 'mapbox://styles/kevinirace/cj65fkrkf67yv2qp0ik49zqeg',
+          center: [10, 20],
+          zoom: 2,
+          interactive: true,
+          minZoom: 2
+      });
+
+      map.scrollZoom.disable();
+      map.addControl(new mapboxgl.NavigationControl());
+
+      map.on('style.load', function () {
+        for (x = 0; x < countries.length; x++){
+          map.setLayoutProperty(countries[x], 'visibility', 'none');
+        }
+      });
+
+      function toggleCountry(country){
+        console.log(country);
+        console.log("Country clicked.");
+        console.log(map);
+        var visibility = map.getLayoutProperty(country, 'visibility');
+        console.log(visibility);
+        if (visibility === 'visible') {
+            map.setLayoutProperty(country, 'visibility', 'none');
+        } else {
+            map.setLayoutProperty(country, 'visibility', 'visible');
+        }
+      }
+
+      function populateList(){
+        var list = document.getElementById('myUL');
+        for (x = 0; x < countries.length; x++){
+          var item = document.createElement('li');
+          var anc = document.createElement('a');
+          var country = countries[x];
+          anc.innerHTML = country;
+          anc.onclick = function (){
+            toggleCountry(this.innerHTML);
+          }
+          item.appendChild(anc);
+          list.appendChild(item);
+        }
+      }
+
+      function myFunction() {
+          var input, filter, ul, li, a, i;
+          input = document.getElementById('myInput');
+          filter = input.value.toUpperCase();
+          ul = document.getElementById("myUL");
+          li = ul.getElementsByTagName('li');
+          if (filter.length > 0){
+            ul.style.display = "block";
+          }
+          else{
+            ul.style.display = "none";
+          }
+          for (i = 0; i < li.length; i++){
+              a = li[i].getElementsByTagName("a")[0];
+              if (a.innerHTML.toUpperCase().indexOf(filter) > -1) {
+                  li[i].style.display = "";
+              } else {
+                  li[i].style.display = "none";
+              }
+          }
+      }
+
+      function toggleEdit(){  // toggle visibility of editing area
+        var editArea = document.getElementById('editCountry');
+        var button = document.getElementById('saveButton');
+        if (editArea.style.visibility === "visible"){
+          editArea.style.visibility= "hidden";
+          button.innerHTML = "Edit Your Map";
+          save2server(countries);
+        }
+        else{
+          editArea.style.visibility = "visible";
+          button.innerHTML = "Submit Changes";
+        }
+      }
+      window.onload = populateList;
+  </script>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+  <script>
+      var socket = io();
+
+      let current_user = "";
+
+      var parameter = location.search.substring(1);
+      console.log('parameter', parameter);
+      var temp = parameter.split('=');
+      console.log('temp', temp);
+      var userEmail = temp[1];
+      current_user = userEmail;
+      console.log(userEmail);
+      getData(userEmail);
+
+      socket.on('initialize', function (res) {
+        console.log('initializing client side');
+        user_countries = res.countries;
+        for(let i = 0; i < user_countries.length; i++){
+          toggleCountry(user_countries[i]);
+        }
+      });
+
+      function save2server(countries) {
+          let user_countries = [];
+          for(let y = 0; y < countries.length; y++){
+            if(map.getLayoutProperty(countries[y], 'visibility') == 'visible'){
+              user_countries.push(countries[y]);
+            }
+          }
+          socket.emit('saveData', {user: current_user, countries: user_countries});
+      }
+
+      function getData(clientUsername){
+        socket.emit('initialize', clientUsername);
+      }
+
+  </script>
+
+  </body>
+</html>

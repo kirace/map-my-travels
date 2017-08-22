@@ -1,0 +1,125 @@
+body {
+  height: 100%;
+  background-color: #55657f;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,.5);
+  min-height: 100%;
+  min-height: 100%;
+  -webkit-box-shadow: inset 0 0 100px rgba(0,0,0,.5);
+          box-shadow: inset 0 0 100px rgba(0,0,0,.5);
+}
+
+html {
+
+}
+
+.masthead-nav > li {
+  display: inline-block;
+}
+
+.masthead-nav > li > a {
+  padding-right: 0;
+  padding-left: 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff; /* IE8 proofing */
+  color: rgba(255,255,255,.75);
+  border-bottom: 2px solid transparent;
+}
+.masthead-nav > li > a:hover,
+.masthead-nav > li > a:focus {
+  background-color: transparent;
+  border-bottom-color: #a9a9a9;
+  border-bottom-color: rgba(255,255,255,.25);
+}
+.masthead-nav > .active > a,
+.masthead-nav > .active > a:hover,
+.masthead-nav > .active > a:focus {
+  color: #fff;
+  border-bottom-color: #fff;
+}
+
+.masthead-brand {
+  margin-left:50px;
+  float: left;
+  font-family: 'Cabin Sketch', cursive;
+  font-size:50px;
+}
+.masthead-nav {
+  float: right;
+  margin-right:55px;
+}
+
+.masthead {
+  width: 100%;
+  padding-top: 15px;
+  top: 0;
+}
+
+.mastfoot {
+  width:100%;
+  color: #999; /* IE8 proofing */
+  color: rgba(255,255,255,.5);
+  text-align: center;
+  bottom: 0;
+}
+
+#map {
+  margin-top:100px;
+  width:100%;
+  height:650px;
+}
+
+#editCountry {
+   visibility: hidden;
+
+}
+
+#myInput {
+  color:black;
+    width: 100%; /* Full-width */
+    font-size: 16px; /* Increase font-size */
+    padding: 12px 20px 12px 40px; /* Add some padding */
+    border: 1px solid #ddd; /* Add a grey border */
+    margin-bottom: 12px; /* Add some space below the input */
+}
+
+#myUL {
+    /* Remove default list styling */
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+    display: none;
+}
+
+#myUL li a {
+    border: 1px solid #ddd; /* Add a border to all links */
+    margin-top: -1px; /* Prevent double borders */
+    background-color: #f6f6f6; /* Grey background color */
+    padding: 12px; /* Add some padding */
+    text-decoration: none; /* Remove default text underline */
+    text-shadow:none;
+    font-size: 18px; /* Increase the font-size */
+    color: black; /* Add a black text color */ /* Make it into a block element to fill the whole list */
+    display: block;
+}
+
+#myUL li a:hover:not(.header) {
+    background-color: #eee; /* Add a hover effect to all links, except for headers */
+}
+
+#saveButton {
+  background-color: #303742; /* Green */
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 20px;
+}
+
+#saveButton:hover {
+    box-shadow: 0 9px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+}
