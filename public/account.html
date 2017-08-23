@@ -150,7 +150,7 @@
         if (editArea.style.visibility === "visible"){
           editArea.style.visibility= "hidden";
           button.innerHTML = "Edit Your Map";
-          save2server(countries);
+          save2server();
         }
         else{
           editArea.style.visibility = "visible";
@@ -158,45 +158,36 @@
         }
       }
       window.onload = populateList;
-  </script>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
-  <script>
-      var socket = io();
+  $(document).ready(function() {
+    var parameter = location.search.substring(1);
+    console.log('parameter', parameter);
+    var temp = parameter.split('=');
+    console.log('temp', temp);
+    var userEmail = temp[1];
+    current_user = userEmail;
+    console.log(userEmail);
 
-      let current_user = "";
-
-      var parameter = location.search.substring(1);
-      console.log('parameter', parameter);
-      var temp = parameter.split('=');
-      console.log('temp', temp);
-      var userEmail = temp[1];
-      current_user = userEmail;
-      console.log(userEmail);
-      getData(userEmail);
-
-      socket.on('initialize', function (res) {
-        console.log('initializing client side');
-        user_countries = res.countries;
-        for(let i = 0; i < user_countries.length; i++){
-          toggleCountry(user_countries[i]);
-        }
-      });
-
-      function save2server(countries) {
-          let user_countries = [];
-          for(let y = 0; y < countries.length; y++){
-            if(map.getLayoutProperty(countries[y], 'visibility') == 'visible'){
-              user_countries.push(countries[y]);
+    $.get("/getData", {email: userEmail} , function(data){
+            let user_countries = data;
+            for(i = 0; i < user_countries.length; i++){
+              toggleCountry(user_countries[i]);
             }
-          }
-          socket.emit('saveData', {user: current_user, countries: user_countries});
-      }
+    });
 
-      function getData(clientUsername){
-        socket.emit('initialize', clientUsername);
+    }); //END document.ready
+
+    function save2server(){
+      let user_countries = [];
+      for(let y = 0; y < countries.length; y++){
+        if(map.getLayoutProperty(countries[y], 'visibility') == 'visible'){
+          user_countries.push(countries[y]);
+        }
       }
+      $.post( "/saveData", {user: current_user, countries: user_countries}).done(function(data) {
+      alert( "Data Loaded: " + data );
+    });
+    }
 
   </script>
 

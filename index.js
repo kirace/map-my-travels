@@ -41,6 +41,32 @@ app.get('/account',function(req,res){
     res.sendFile('account.html',{'root': __dirname + '/public'});
 });
 
+app.get('/getData', function(request, response) {
+
+  var email = request.body.email;
+  var user = users.get(email);
+  // We want to set the content-type header so that the browser understands
+  //  the content of the response.
+  response.contentType('application/json');
+
+  // Normally, the would probably come from a database, but we can cheat:
+  /*
+  var countries = [
+    { name: 'Dave', location: 'Atlanta' },
+    { name: 'Santa Claus', location: 'North Pole' },
+    { name: 'Man in the Moon', location: 'The Moon' }
+  ];*/
+
+  // Since the request is for a JSON representation of the people, we
+  //  should JSON serialize them. The built-in JSON.stringify() function
+  //  does that.
+  var countryJSON = JSON.stringify(user.countries);
+
+  // Now, we can use the response object's send method to push that string
+  //  of people JSON back to the browser in response to this request:
+  response.send(peopleJSON);
+});
+
 app.post('/register', function(req, res) {
 	console.log(req.body);
   if(users.get(req.body.inputEmail)){
@@ -84,31 +110,15 @@ app.post('/verifyuser', function(req,res){
 
 });
 
-
-io.on('connection', function(socket){
-  console.log('a user connected');
-
-  socket.on('saveData', function (data) {
-    console.log('saving data');
-    console.log('user ', data.user);
-    console.log('countries ', data.countries);
-    let password = users.get(data.user).pass;
-    users.set(data.user, {pass: password, countries: data.countries});
-  });
-
-  socket.on('initialize', function (data) {
-    console.log('initialize username: ', data);
-    console.log('socket id: ', socket.id)
-    clients.set(data, socket.id);
-    let userCountries = users.get(data).countries;
-    console.log(clients.get(data));
-    io.to(clients.get(data)).emit('initialize', {countries: userCountries});
-  });
-
-  socket.on('disconnect', function() {
-        clients.delete(socket.id);
-    });
+app.post('/saveData', function(req,res){
+  var user_name = req.body.user;
+  var user_countries = req.body.countries;
+  let password = users.get(user_name).pass;
+  users.set(user_name, {pass: password, countries: user_countries});
+  
 });
+
+
 
 http.listen(3000, function(){
   console.log('listening on *:3000');
