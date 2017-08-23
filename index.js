@@ -115,11 +115,11 @@ app.post('/saveData', function(req,res){
   var user_countries = req.body.countries;
   let password = users.get(user_name).pass;
   users.set(user_name, {pass: password, countries: user_countries});
-  
+
 });
 
 
 
-http.listen(3000, function(){
+http.listen(process.env.PORT || 3000, function(){
   console.log('listening on *:3000');
 });
