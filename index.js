@@ -42,9 +42,10 @@ app.get('/account',function(req,res){
 });
 
 app.get('/getData', function(request, response) {
-
-  var email = request.body.email;
-  var user = users.get(email);
+  console.log('req', request);
+  var email = request.query.email;
+  console.log('email: ', email);
+  var userCountries = users.get(email).countries;
   // We want to set the content-type header so that the browser understands
   //  the content of the response.
   response.contentType('application/json');
@@ -60,11 +61,11 @@ app.get('/getData', function(request, response) {
   // Since the request is for a JSON representation of the people, we
   //  should JSON serialize them. The built-in JSON.stringify() function
   //  does that.
-  var countryJSON = JSON.stringify(user.countries);
+  var countryJSON = JSON.stringify(userCountries);
 
   // Now, we can use the response object's send method to push that string
   //  of people JSON back to the browser in response to this request:
-  response.send(peopleJSON);
+  response.send(countryJSON);
 });
 
 app.post('/register', function(req, res) {
