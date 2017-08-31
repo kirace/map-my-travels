@@ -40,7 +40,7 @@
   </div>
 
   <div id="editCountry">
-    <input type="text" id="myInput" onkeyup="myFunction()" placeholder="Search for countries or territories..">
+    <input type="text" id="myInput" onkeyup="buildList()" placeholder="Search for countries or territories..">
     <ul id="myUL">
     </ul>
   </div>
@@ -93,14 +93,29 @@
         for (x = 0; x < countries.length; x++){
           map.setLayoutProperty(countries[x], 'visibility', 'none');
         }
+        var parameter = location.search.substring(1);
+        console.log('parameter', parameter);
+        var temp = parameter.split('=');
+        console.log('temp', temp);
+        var userEmail = temp[1];
+        current_user = userEmail;
+        console.log(userEmail);
+
+        $.get("/getData", {email: userEmail} , function(data){
+                console.log(data);
+                if(data !== null){
+                  let user_countries = data;
+                  for(i = 0; i < user_countries.length; i++){
+                    toggleCountry(user_countries[i]);
+                  }
+                }
+        });
       });
 
       function toggleCountry(country){
-        console.log(country);
-        console.log("Country clicked.");
-        console.log(map);
+        //console.log(country);
         var visibility = map.getLayoutProperty(country, 'visibility');
-        console.log(visibility);
+        //console.log(visibility);
         if (visibility === 'visible') {
             map.setLayoutProperty(country, 'visibility', 'none');
         } else {
@@ -123,7 +138,7 @@
         }
       }
 
-      function myFunction() {
+      function buildList() {
           var input, filter, ul, li, a, i;
           input = document.getElementById('myInput');
           filter = input.value.toUpperCase();
@@ -158,37 +173,19 @@
           button.innerHTML = "Submit Changes";
         }
       }
-      window.onload = populateList;
+      window.onload = populateList(); //END document.ready
 
-  $(document).ready(function() {
-    var parameter = location.search.substring(1);
-    console.log('parameter', parameter);
-    var temp = parameter.split('=');
-    console.log('temp', temp);
-    var userEmail = temp[1];
-    current_user = userEmail;
-    console.log(userEmail);
-
-    $.get("/getData", {email: userEmail} , function(data){
-            let user_countries = data;
-            for(i = 0; i < user_countries.length; i++){
-              toggleCountry(user_countries[i]);
+        function save2server(){
+          let user_countries = [];
+          for(let y = 0; y < countries.length; y++){
+            if(map.getLayoutProperty(countries[y], 'visibility') == 'visible'){
+              user_countries.push(countries[y]);
             }
-    });
-
-    }); //END document.ready
-
-    function save2server(){
-      let user_countries = [];
-      for(let y = 0; y < countries.length; y++){
-        if(map.getLayoutProperty(countries[y], 'visibility') == 'visible'){
-          user_countries.push(countries[y]);
+          }
+          $.post( "/saveData", {user: current_user, countries: user_countries}).done(function(data) {
+          //alert( "Data Loaded: " + data );
+        });
         }
-      }
-      $.post( "/saveData", {user: current_user, countries: user_countries}).done(function(data) {
-      alert( "Data Loaded: " + data );
-    });
-    }
 
   </script>
 

@@ -2,13 +2,20 @@ var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+var pg = require('pg');
+
+const config = {
+  user: 'ajoxkpklisbuqh',
+  password: '03f38407bd8de6f8ff7aec1b18c89139bcdaefd2e74facd8132800cad3405e08',
+  host: 'ec2-54-163-237-25.compute-1.amazonaws.com',
+  port: '5432',
+  database: 'dahd3h9qg8blj',
+  ssl: true
+};
+
+var pool = new pg.Pool(config);
 
 var bodyParser = require('body-parser');
-
-let users = new Map(); // maps each username to its associated password and user data
-let clients = new Map(); //maps each current server client to its username
-users.set('kevinirace@gmail.com', {pass: 'admin', countries: ['Italy', 'United States of America']});
-
 
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-fo
@@ -42,34 +49,35 @@ app.get('/account',function(req,res){
 });
 
 app.get('/getData', function(request, response) {
-  console.log('req', request);
   var email = request.query.email;
   console.log('email: ', email);
-  var userCountries = users.get(email).countries;
-  // We want to set the content-type header so that the browser understands
-  //  the content of the response.
   response.contentType('application/json');
 
-  // Normally, the would probably come from a database, but we can cheat:
-  /*
-  var countries = [
-    { name: 'Dave', location: 'Atlanta' },
-    { name: 'Santa Claus', location: 'North Pole' },
-    { name: 'Man in the Moon', location: 'The Moon' }
-  ];*/
+  pool.connect(function(err, client, done) {
+  if(err) {
+    return console.error('error fetching client from pool', err);
+  }
 
-  // Since the request is for a JSON representation of the people, we
-  //  should JSON serialize them. The built-in JSON.stringify() function
-  //  does that.
-  var countryJSON = JSON.stringify(userCountries);
+  client.query('SELECT countries FROM user_data WHERE username = $1 ;', [email], function(err, result) {
+    //call 'done()' to release the client back to the pool
+    done();
 
-  // Now, we can use the response object's send method to push that string
-  //  of people JSON back to the browser in response to this request:
-  response.send(countryJSON);
+    if(err) {
+      return console.error('error running query', err);
+    }
+    console.log(result);
+    console.log(result.rows[0].countries);
+    response.json(result.rows[0].countries);
+
+    //output: 1
+  });
+});
+
 });
 
 app.post('/register', function(req, res) {
 	console.log(req.body);
+  /*
   if(users.get(req.body.inputEmail)){
     cosole.log("User already exists");
     res.redirect('/showSignUpPage');
@@ -79,16 +87,37 @@ app.post('/register', function(req, res) {
     users.set(req.body.inputEmail, {pass: req.body.inputPassword, countries: []});
     res.redirect('/registered');
     res.end();
+  }*/
+
+  pool.connect(function(err, client, done) {
+  if(err) {
+    return console.error('error fetching client from pool', err);
   }
 
+  client.query('INSERT INTO user_data VALUES ($1, $2, DEFAULT, DEFAULT);',[req.body.inputEmail, req.body.inputPassword], function(err, result) {
+    //call 'done()' to release the client back to the pool
+    done();
+
+    if(err) {
+      return console.error('error running query', err);
+      res.redirect('/showSignUpPage');
+      res.end();
+    }
+
+    console.log(result);
+    console.log(result.rows[0]);
+    res.redirect('/registered');
+    res.end();
+    //output: 1
+  });
+
+});
 });
 
 app.post('/verifyuser', function(req,res){
-
-	console.log(users);
   console.log('req.body');
   console.log(req.body);
-
+  /*
   if(users.get(req.body.inputEmail)){
     if(users.get(req.body.inputEmail).pass = req.body.inputPassword){
       console.log("user verified!");
@@ -107,19 +136,62 @@ app.post('/verifyuser', function(req,res){
     console.log("user not found");
     res.redirect('/showSignInPageretry');
     res.end();
+  }*/
+  pool.connect(function(err, client, done) {
+  if(err) {
+    return console.error('error fetching client from pool', err);
   }
 
+  client.query('SELECT password FROM user_data WHERE username = $1 ;', [req.body.inputEmail], function(err, result) {
+    //call 'done()' to release the client back to the pool
+    done();
+
+    if(err) {
+      return console.error('error running query', err);
+    }
+    console.log(result);
+    console.log(result.rows[0]);
+
+    if(result.rows[0].password == req.body.inputPassword){
+      var string = req.body.inputEmail;
+      res.redirect('/account?valid='+string);
+      res.end();
+    }
+    else{
+      console.log("user not found");
+      res.redirect('/showSignInPageretry');
+      res.end();
+    }
+
+  });
+});
 });
 
 app.post('/saveData', function(req,res){
   var user_name = req.body.user;
-  var user_countries = req.body.countries;
-  let password = users.get(user_name).pass;
-  users.set(user_name, {pass: password, countries: user_countries});
+  var user_countries = JSON.stringify(req.body.countries);
 
+  user_countries = user_countries.replace('[','{').replace(']','}');
+  console.log('to be saved: ', user_countries);
+
+  pool.connect(function(err, client, done) {
+  if(err) {
+    return console.error('error fetching client from pool', err);
+  }
+
+  client.query('UPDATE user_data SET countries = $1 WHERE username = $2 ;', [user_countries, user_name], function(err, result) {
+    //call 'done()' to release the client back to the pool
+    done();
+
+    if(err) {
+      return console.error('error running query', err);
+    }
+    console.log(result);
+    console.log(result.rows[0]);
+    //output: 1
+  });
 });
-
-
+});
 
 http.listen(process.env.PORT || 3000, function(){
   console.log('listening on *:3000');
