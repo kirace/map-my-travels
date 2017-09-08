@@ -75,19 +75,35 @@ app.get('/getData', function(request, response) {
 
 });
 
-app.post('/register', function(req, res) {
-	console.log(req.body);
-  /*
-  if(users.get(req.body.inputEmail)){
-    cosole.log("User already exists");
-    res.redirect('/showSignUpPage');
-    res.end();
+app.get('/getCountries', function(request, response) {
+  response.contentType('application/json');
+
+  results = [];
+
+  pool.connect(function(err, client, done) {
+  if(err) {
+    return console.error('error fetching client from pool', err);
   }
-  else{
-    users.set(req.body.inputEmail, {pass: req.body.inputPassword, countries: []});
-    res.redirect('/registered');
-    res.end();
-  }*/
+
+  client.query('SELECT * FROM countries;', function(err, result) {
+    //call 'done()' to release the client back to the pool
+    done();
+
+    if(err) {
+      return console.error('error running query', err);
+    }
+    for(i = 0; i < result.rows.length; i++){
+      temp = [result.rows[i].name, result.rows[i].continent];
+      results.push(temp);
+    }
+    response.json(results);
+
+  });
+});
+
+});
+
+app.post('/register', function(req, res) {
 
   pool.connect(function(err, client, done) {
   if(err) {
@@ -103,9 +119,6 @@ app.post('/register', function(req, res) {
       res.redirect('/showSignUpPage');
       res.end();
     }
-
-    console.log(result);
-    console.log(result.rows[0]);
     res.redirect('/registered');
     res.end();
     //output: 1
@@ -115,28 +128,7 @@ app.post('/register', function(req, res) {
 });
 
 app.post('/verifyuser', function(req,res){
-  console.log('req.body');
-  console.log(req.body);
-  /*
-  if(users.get(req.body.inputEmail)){
-    if(users.get(req.body.inputEmail).pass = req.body.inputPassword){
-      console.log("user verified!");
-      //var string = encodeURIComponent(req.body.inputEmail);
-      var string = req.body.inputEmail;
-      res.redirect('/account?valid='+string);
-      res.end();
-    }
-    else{
-      console.log("wrong password");
-      res.redirect('/showSignInPageretry');
-      res.end();
-    }
-  }
-  else{
-    console.log("user not found");
-    res.redirect('/showSignInPageretry');
-    res.end();
-  }*/
+
   pool.connect(function(err, client, done) {
   if(err) {
     return console.error('error fetching client from pool', err);
@@ -149,8 +141,6 @@ app.post('/verifyuser', function(req,res){
     if(err) {
       return console.error('error running query', err);
     }
-    console.log(result);
-    console.log(result.rows[0]);
 
     if(result.rows[0].password == req.body.inputPassword){
       var string = req.body.inputEmail;
@@ -172,7 +162,6 @@ app.post('/saveData', function(req,res){
   var user_countries = JSON.stringify(req.body.countries);
 
   user_countries = user_countries.replace('[','{').replace(']','}');
-  console.log('to be saved: ', user_countries);
 
   pool.connect(function(err, client, done) {
   if(err) {
@@ -186,9 +175,6 @@ app.post('/saveData', function(req,res){
     if(err) {
       return console.error('error running query', err);
     }
-    console.log(result);
-    console.log(result.rows[0]);
-    //output: 1
   });
 });
 });

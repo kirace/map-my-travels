@@ -9,8 +9,9 @@ body {
           box-shadow: inset 0 0 100px rgba(0,0,0,.5);
 }
 
-html {
-
+h3{
+  font-family: 'Cabin Sketch', cursive;
+  font-size: 30px;
 }
 
 .masthead-nav > li {
@@ -72,12 +73,13 @@ html {
 
 #editCountry {
    visibility: hidden;
+   text-align: center;
 
 }
 
 #myInput {
   color:black;
-    width: 100%; /* Full-width */
+    width: 90%; /* Full-width */
     font-size: 16px; /* Increase font-size */
     padding: 12px 20px 12px 40px; /* Add some padding */
     border: 1px solid #ddd; /* Add a grey border */
@@ -88,7 +90,8 @@ html {
     /* Remove default list styling */
     list-style-type: none;
     padding: 0;
-    margin: 0;
+    width: 90%;
+    margin: 0 auto;
     display: none;
 }
 
@@ -105,7 +108,7 @@ html {
 }
 
 #myUL li a:hover:not(.header) {
-    background-color: #eee; /* Add a hover effect to all links, except for headers */
+    background-color: #ccced1; /* Add a hover effect to all links, except for headers */
 }
 
 #saveButton {
@@ -122,4 +125,17 @@ html {
 
 #saveButton:hover {
     box-shadow: 0 9px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
+}
+
+#travelData{
+  margin: 75px;
+}
+
+select {
+  background-color: #55657f;
+}
+
+#chartSection {
+  display:flex;
+	vertical-align: middle;
 }
