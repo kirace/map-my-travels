@@ -71,27 +71,61 @@ h3{
   height:650px;
 }
 
-#editCountry {
-   visibility: hidden;
-   text-align: center;
+#editArea {
+  /*visibility: hidden;*/
+  display: none;
+  /*border: 3px solid black;*/
+}
 
+#editArea p {
+  font-size: 17px;
+  margin-left: 65px;
+  font-family: 'Cabin Sketch', cursive;
 }
 
 #myInput {
+  margin-left: 65px;
   color:black;
-    width: 90%; /* Full-width */
-    font-size: 16px; /* Increase font-size */
-    padding: 12px 20px 12px 40px; /* Add some padding */
-    border: 1px solid #ddd; /* Add a grey border */
-    margin-bottom: 12px; /* Add some space below the input */
+  width: 90%; /* Full-width */
+  font-size: 16px; /* Increase font-size */
+  padding: 12px 20px 12px 40px; /* Add some padding */
+  border: 1px solid #ddd; /* Add a grey border */
+  margin-bottom: 12px; /* Add some space below the input */
+}
+
+#cityInput {
+  margin-left: 65px;
+  color:black;
+  width: 50%; /* Full-width */
+  font-size: 16px; /* Increase font-size */
+  padding: 12px 20px 12px 40px; /* Add some padding */
+  border: 1px solid #ddd; /* Add a grey border */
+  margin-bottom: 12px; /* Add some space below the input */
+}
+
+#cityBtn {
+  background-color: #303742;
+  border: none;
+  color: white;
+  text-align: center;
+  text-decoration: none;
+  font-size: 14px;
+  padding: 15px 32px;
+  margin: 20px;
+  margin-top: 0;
+}
+
+#cityBtn:hover {
+    box-shadow: 0 9px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19);
 }
 
 #myUL {
     /* Remove default list styling */
     list-style-type: none;
+    margin-left:65px;
     padding: 0;
     width: 90%;
-    margin: 0 auto;
+    /*margin: 0 auto;*/
     display: none;
 }
 
@@ -138,4 +172,27 @@ select {
 #chartSection {
   display:flex;
 	vertical-align: middle;
+}
+
+.marker {
+  background-image: url('../images/pin-in-the-map.png');
+  background-size: cover;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+#message {
+  color:red;
+}
+
+.mapboxgl-popup {
+        max-width: 400px;
+        font: 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+}
+
+.mapboxgl-popup strong {
+  color: #55657f;
+  text-shadow: none;
 }

@@ -7,22 +7,17 @@
   <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
   <meta name="description" content="">
   <meta name="author" content="">
-  <link rel="icon" href="/m_logo.png">
-
+  <link rel="icon" href="../images/m_logo.png">
   <title>Map My Travels</title>
-
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-
   <!-- Bootstrap core CSS -->
   <link href="../node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-
   <!-- Custom styles for this template -->
   <link href="https://fonts.googleapis.com/css?family=Alfa+Slab+One|Cabin+Sketch|Kaushan+Script" rel="stylesheet">
   <script src='https://api.mapbox.com/mapbox-gl-js/v0.38.0/mapbox-gl.js'></script>
   <link href='https://api.mapbox.com/mapbox-gl-js/v0.38.0/mapbox-gl.css' rel='stylesheet'/>
   <link rel="stylesheet" href="../style/account.css">
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-
 </head>
 
 <body>
@@ -30,26 +25,30 @@
       <h3 class="masthead-brand">Map My Travels</h3>
       <nav>
         <ul class="nav masthead-nav">
-          <li class="active"><a href="/">Log Out</a></li>
+          <li class="active"><a href='/' onclick="logOut()">Log Out</a></li>
         </ul>
       </nav>
   </div>
-
   <div id='map'></div>
-
   <div style="text-align:center;">
       <button id="saveButton" onclick="toggleEdit()">Edit Your Map</button>
   </div>
-
-  <div id="editCountry">
-    <input type="text" id="myInput" onkeyup="buildList()" placeholder="Search for countries or territories..">
-    <ul id="myUL"></ul>
+  <div id="editArea">
+    <p>Add Country:</p>
+    <div id="editCountry">
+      <input type="text" id="myInput" onkeyup="buildList()" placeholder="Search for countries or territories..">
+      <ul id="myUL"></ul>
+    </div>
+    <p>Add City:</p>
+    <input type="text" id="cityInput" placeholder="City, Country"/>
+    <button id="cityBtn" onclick="inputCity()">Add City</button>
+    <div id="message"></div>
   </div>
-
-
-
   <div id="travelData">
     <h3>My Travel Data</h3>
+    <div class="stats" style="margin:15px; font-size:18px; text-align:center; font-family: Cabin Sketch;">
+       <span id="cityCount"></span><span id="countryCount"></span>
+    </div>
     <select class="selectpicker" id="selector" onchange="drawChart();" style="margin-bottom:15px;">
       <option>Europe</option>
       <option>North America</option>
@@ -63,17 +62,20 @@
       <ul id='cList' style="float: left; font-family: Cabin Sketch; font-size: 20px; list-style-type: square; padding-top:55px;"></ul>
     </div>
   </div>
-
   <div class="mastfoot">
     <div class="inner">
       <p>Map My Travels, by <a>Kevin Irace</a>.</p>
     </div>
   </div>
+
   <script>
-      let countries = [];
-      let countriesInEurope = 51, countriesInAsia = 53, countriesInAfrica = 57, countriesInNA = 36, countriesInSA = 15, countriesInOceania = 23;
+      var countries = [];
+      var myCountries = [], myCities = [];
+      var countriesInEurope = 51, countriesInAsia = 53, countriesInAfrica = 57, countriesInNA = 36, countriesInSA = 15, countriesInOceania = 23;
+      var popUps = new Map();
 
       mapboxgl.accessToken = 'pk.eyJ1Ijoia2V2aW5pcmFjZSIsImEiOiJjajY0M2ExZDIxbm1hMzNwOHp0cWpzbjJkIn0.g_KHQKSe60ViArp6hW-2TA';
+
       var map = new mapboxgl.Map({
           container: 'map',
           style: 'mapbox://styles/kevinirace/cj65fkrkf67yv2qp0ik49zqeg',
@@ -88,52 +90,60 @@
 
       map.on('style.load', function () {
         $.get("/getCountries", function(data){
-                //console.log(data);
-                if(data !== null){
-                  countries = data;
-                }
+                if(data !== null){  countries = data; }
                 populateList();
-                initializeMap();
-                retrieveData();
+                initializeMap(function(){
+                  retrieveData();
+                });
         });
       });
 
       function retrieveData(){
-        var parameter = location.search.substring(1);
-        //console.log('parameter', parameter);
-        var temp = parameter.split('=');
-        //console.log('temp', temp);
-        var userEmail = temp[1];
-        current_user = userEmail;
-        //console.log(userEmail);
-        $.get("/getData", {email: userEmail} , function(data){
-                //console.log(data);
-                if(data !== null){
-                  let user_countries = data;
+        $.get("/getData", function(data){
+          console.log(data);
+                if(data.countryList !== null){
+                  myCountries = data.countryList;
+                  let user_countries = data.countryList;
                   for(i = 0; i < user_countries.length; i++){
-                    toggleCountry(user_countries[i]);
+                    map.setLayoutProperty(user_countries[i], 'visibility', 'visible');
+                  }
+                  setStats();
+                }
+                if(data.cityList !== null){
+                  myCities = data.cityList;
+                  let user_cities = data.cityList;
+                  for(x = 0; x < user_cities.length; x++){
+                    initializeCity(user_cities[x]);
                   }
                 }
                 google.charts.load("current", {packages:["corechart"]});
                 google.charts.setOnLoadCallback(drawChart);
+
         });
       }
 
-      function initializeMap(){
+      function initializeMap(callback){
         for (x = 0; x < countries.length; x++){
           map.setLayoutProperty(countries[x][0], 'visibility', 'none');
         }
+        callback();
       }
 
       function toggleCountry(country){
-        //console.log(country);
         var visibility = map.getLayoutProperty(country, 'visibility');
-        //console.log(visibility);
         if (visibility === 'visible') {
             map.setLayoutProperty(country, 'visibility', 'none');
+            var index = myCountries.indexOf(country);
+            if (index > -1) {
+              myCountries.splice(index, 1);
+            }
+            updateCountryDB('REMOVE', country);
         } else {
             map.setLayoutProperty(country, 'visibility', 'visible');
+            myCountries.push(country);
+            updateCountryDB('ADD', country);
         }
+        setStats();
       }
 
       function populateList(){
@@ -157,7 +167,6 @@
         let countryNames = [];
         for(let y = 0; y < countries.length; y++){
           if((map.getLayoutProperty(countries[y][0], 'visibility') == 'visible') && (countries[y][1] == continent)){
-            console.log('visited! ', countries[y]);
             numVisited++;
             countryNames.push(countries[y][0]);
           }
@@ -182,28 +191,135 @@
       }
 
       function toggleEdit(){  // toggle visibility of editing area
-        var editArea = document.getElementById('editCountry');
+        var editArea = document.getElementById('editArea');
         var button = document.getElementById('saveButton');
-        if (editArea.style.visibility === "visible"){
-          editArea.style.visibility= "hidden";
+        if (editArea.style.display === "block"){
+          editArea.style.display= "none";
           button.innerHTML = "Edit Your Map";
-          save2server();
+          drawChart();
         }
         else{
-          editArea.style.visibility = "visible";
-          button.innerHTML = "Submit Changes";
+          editArea.style.display = "block";
+          button.innerHTML = "Finished";
         }
       }
 
-      function save2server(){
-        let user_countries = [];
-        for(let y = 0; y < countries.length; y++){
-          if(map.getLayoutProperty(countries[y][0], 'visibility') == 'visible'){
-            user_countries.push(countries[y][0]);
+      function updateCountryDB(action, country){
+        $.post( "/updateCountryDB", {action: action, country: country});
+        console.log('UPDATING COUNTRY');
+      }
+
+      function updateCityDB(action, city){
+        $.post( "/updateCityDB", {action: action, city: city});
+        console.log('UPDATING CITY');
+      }
+
+      function setStats(){
+        let cityStat = document.getElementById('cityCount');
+        let countryStat = document.getElementById('countryCount');
+        countryStat.innerHTML = myCountries.length.toString() + ' different countries.';
+        cityStat.innerHTML = myCities.length.toString() + ' cities in ';
+      }
+
+      function inputCity(){
+        console.log('GETTING CITY');
+        let input = document.getElementById('cityInput');
+        let val = input.value;
+        let message = document.getElementById('message');
+        message.innerHTML = "";
+        $.get("/addCity", {city: val}, function(data){
+          console.log('GOT CITY', data);
+          if(data == null || data.features.length < 1){
+            message.innerHTML = "Not Found, Try Again.";
+            return;
           }
+          let coordinates = data.features[0].geometry.coordinates;
+          let name = data.features[0].place_name;
+          var pointName = name.concat("-point"); //just in case name of a Country is entered (don't want to mix up layer names)
+          if(myCities.indexOf(name) > -1){
+            return;
+          }
+          else{
+            addCity(name, pointName, coordinates);
+            myCities.push(name);
+            updateCityDB('ADD', name);
+          }
+          setStats();
+        });
+      }
+
+      function initializeCity(query){
+        $.get("/addCity", {city: query}, function(data){
+          if(data.features.length < 1){
+            message.innerHTML = "Not Found, Try Again.";
+            return;
+          }
+          let coordinates = data.features[0].geometry.coordinates;
+          let name = data.features[0].place_name;
+          var pointName = name.concat("-point"); //just in case name of a Country is entered (don't want to mix up layer names)
+          addCity(name, pointName, coordinates);
+          setStats();
+        });
+      }
+
+      function removeCity(name, pointName){
+        map.getSource(pointName).setData({
+            "type": "FeatureCollection",
+            "features": []
+        });
+        let idx = myCities.indexOf(name);
+        if(idx != -1) {
+        	myCities.splice(idx, 1);
         }
-        $.post( "/saveData", {user: current_user, countries: user_countries}).done(function(data) {
-        //alert( "Data Loaded: " + data );
+        let pu = popUps.get(name);
+        pu.remove();
+        updateCityDB('REMOVE', name);
+      }
+
+      function addCity(name, pointName, coordinates){
+        map.addSource(pointName, {
+             type: 'geojson',
+             data: {
+                 "type": "FeatureCollection",
+                 "features": [{
+                     "type": "Feature",
+                     "properties": {
+                       "description": "<strong>"+ name + "</strong>" + '<a style=\"margin-left:5px;\" href=\"javascript:removeCity(\'' + name + '\', \''+ pointName +'\')\">Remove</a>',
+                       "title": pointName
+                     },
+                     "geometry": {
+                         "type": "Point",
+                         "coordinates": coordinates
+                     }
+                 }]
+             }
+        });
+        map.addLayer({
+            "id": pointName,
+            "source": pointName,
+            "type": "circle",
+            "paint": {
+                "circle-radius": 5,
+                "circle-color": "#818284",
+                "circle-stroke-width": 1,
+                "circle-stroke-color": '#FFF'
+            }
+        });
+        map.on('click', pointName, function (e) {
+            let popup = new mapboxgl.Popup()
+                .setLngLat(e.features[0].geometry.coordinates)
+                .setHTML(e.features[0].properties.description)
+                .addTo(map);
+            popUps.set(name, popup);
+        });
+        // Change the cursor to a pointer when the mouse is over the places layer.
+        map.on('mouseenter', pointName, function () {
+            map.getCanvas().style.cursor = 'pointer';
+        });
+
+        // Change it back to a pointer when it leaves.
+        map.on('mouseleave', pointName, function () {
+            map.getCanvas().style.cursor = '';
         });
       }
 
@@ -220,7 +336,6 @@
       function drawChart() {
         var selector = document.getElementById('selector');
         var currentContinent = selector.value;
-        console.log(currentContinent);
         var totalCountries;
         if(currentContinent == 'North America'){ totalCountries = countriesInNA; }
         else if(currentContinent == 'South America'){ totalCountries = countriesInSA; }
@@ -253,6 +368,12 @@
 
         var chart = new google.visualization.PieChart(document.getElementById('piechart_3d'));
         chart.draw(data, options);
+      }
+
+      function logOut(){
+        $.get("/logOut", function(data){
+                console.log('Logged Out');
+        });
       }
 
   </script>
