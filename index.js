@@ -26,11 +26,8 @@ app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x
 app.use(cookieParser("K secret"));
 
 app.use('/node_modules',  express.static(__dirname + '/node_modules'));
-
 app.use('/style',  express.static(__dirname + '/style'));
-
 app.use('/images',  express.static(__dirname + '/images'));
-
 
 app.get('/',function(req,res){
     res.sendFile('home.html',{'root': __dirname + '/public'});
@@ -61,11 +58,9 @@ app.get('/logOut', function(req, res) {
   console.log('Logging Out');
 });
 
-
-app.get('/getData', function(request, response) {
+app.get('/getData', function(request, response) { //retrieves the countries and cities associated with user from database
 
   var email = request.signedCookies['myUsername'];
-  console.log('email: ', email);
   response.contentType('application/json');
   var res = {};
   var countries = [], cities = [];
@@ -74,16 +69,15 @@ app.get('/getData', function(request, response) {
     if(err) {
       return console.error('error fetching client from pool', err);
     }
-
     client.query('SELECT country FROM user_countries WHERE username = $1 ;', [email], function(err, result) {
-
       if(err) {
         return console.error('error running query', err);
       }
+
       for(i = 0; i < result.rows.length; i++){
         countries.push(result.rows[i].country);
       }
-      console.log(countries);
+
       res.countryList = countries;
 
       client.query('SELECT city FROM user_cities WHERE username = $1 ;', [email], function(err, result) {
@@ -96,38 +90,36 @@ app.get('/getData', function(request, response) {
         for(i = 0; i < result.rows.length; i++){
           cities.push(result.rows[i].city);
         }
-        console.log(cities);
+
         res.cityList = cities;
-        console.log(res);
         response.json(res);
       });
     });
   });
-
 });
 
-app.get('/getCountries', function(request, response) {
+app.get('/getCountries', function(request, response) {  // retrieves the complete list of countries from database
   response.contentType('application/json');
   results = [];
   pool.connect(function(err, client, done) {
-  if(err) {
-    return console.error('error fetching client from pool', err);
-  }
-  client.query('SELECT * FROM countries;', function(err, result) {
-    done();
     if(err) {
-      return console.error('error running query', err);
+      return console.error('error fetching client from pool', err);
     }
-    for(i = 0; i < result.rows.length; i++){
-      temp = [result.rows[i].name, result.rows[i].continent];
-      results.push(temp);
-    }
-    response.json(results);
-  });
+    client.query('SELECT * FROM countries;', function(err, result) {
+      done();
+      if(err) {
+        return console.error('error running query', err);
+      }
+      for(i = 0; i < result.rows.length; i++){
+        temp = [result.rows[i].name, result.rows[i].continent];
+        results.push(temp);
+      }
+      response.json(results);
+    });
   });
 });
 
-app.get('/addCity', function(request, response) {
+app.get('/addCity', function(request, response) { // retrieves the coordinates of city from Mapbox Geocoding API
   response.contentType('application/json');
   var query = String(request.query.city);
   var result;
@@ -136,74 +128,67 @@ app.get('/addCity', function(request, response) {
     types: 'place'
   }, function(err, data, res) {
     result = data;
-    console.log('ADDED CITY: ', result);
     response.json(result);
   });
 });
 
-app.post('/register', function(req, res) {
+app.post('/register', function(req, res) { // registers a username and hashed password combination to the database
   pool.connect(function(err, client, done) {
-  if(err) {
-    return console.error('error fetching client from pool', err);
-  }
-  var hashedPassword = passwordHash.generate(req.body.inputPassword);
-
-  client.query('INSERT INTO users VALUES ($1, $2, DEFAULT, DEFAULT);',[req.body.inputEmail, hashedPassword], function(err, result) {
-    done();
     if(err) {
-      return console.error('error running query', err);
-      res.redirect('/showSignUpPage');
-      res.end();
+      return console.error('error fetching client from pool', err);
     }
-    res.redirect('/registered');
-    res.end();
-  });
+    var hashedPassword = passwordHash.generate(req.body.inputPassword);
 
-});
-});
-
-app.post('/verifyuser', function(req,res){
-
-  pool.connect(function(err, client, done) {
-
-  if(err) {
-    return console.error('error fetching client from pool', err);
-  }
-
-  client.query('SELECT password FROM users WHERE username = $1 ;', [req.body.inputEmail], function(err, result) {
-
-    done();
-
-    if(err) {
-      return console.error('error running query', err);
-    }
-
-    if(result.rows.length < 1){
-      res.redirect('/showSignInPageretry');
-      res.end();
-    }
-    else{
-      let hashPW = result.rows[0].password;
-      if(passwordHash.verify(req.body.inputPassword, hashPW)){
-        let options = {
-          httpOnly: true, // The cookie only accessible by the web server
-          signed: true // Indicates if the cookie should be signed
-        }
-        res.cookie('myUsername', req.body.inputEmail, options);
-        res.redirect('/account');
+    client.query('INSERT INTO users VALUES ($1, $2);',[req.body.inputEmail, hashedPassword], function(err, result) {
+      done();
+      if(err) {
+        return console.error('error running query', err);
+        res.redirect('/showSignUpPage');
         res.end();
       }
-      else{
-        console.log("user not found");
+      res.redirect('/registered');
+      res.end();
+    });
+});
+});
+
+app.post('/verifyuser', function(req,res){ // checks username and password combination with users database
+  pool.connect(function(err, client, done) {
+    if(err) {
+      return console.error('error fetching client from pool', err);
+    }
+    client.query('SELECT password FROM users WHERE username = $1 ;', [req.body.inputEmail], function(err, result) {
+      done();
+      if(err) {
+        return console.error('error running query', err);
+      }
+
+      if(result.rows.length < 1){
         res.redirect('/showSignInPageretry');
         res.end();
       }
-    }
-  });
+      else{
+        let hashPW = result.rows[0].password;
+        if(passwordHash.verify(req.body.inputPassword, hashPW)){
+          let options = {
+            httpOnly: true, // The cookie only accessible by the web server
+            signed: true // Indicates if the cookie should be signed
+          }
+          res.cookie('myUsername', req.body.inputEmail, options);
+          res.redirect('/account');
+          res.end();
+        }
+        else{
+          console.log("user not found");
+          res.redirect('/showSignInPageretry');
+          res.end();
+        }
+      }
+    });
   });
 });
 
-app.post('/updateCountryDB', function(req,res){
+app.post('/updateCountryDB', function(req,res){ // adds new or removes existing user-country association from database
 
   var action = req.body.action;
   var country = req.body.country;
@@ -230,7 +215,7 @@ app.post('/updateCountryDB', function(req,res){
   });
 });
 
-app.post('/updateCityDB', function(req,res){
+app.post('/updateCityDB', function(req,res){ // adds new or removes existing user-city association from database
 
   var action = req.body.action;
   var city = req.body.city;

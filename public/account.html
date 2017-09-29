@@ -4,15 +4,12 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
   <meta name="description" content="">
   <meta name="author" content="">
   <link rel="icon" href="../images/m_logo.png">
   <title>Map My Travels</title>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-  <!-- Bootstrap core CSS -->
   <link href="../node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
-  <!-- Custom styles for this template -->
   <link href="https://fonts.googleapis.com/css?family=Alfa+Slab+One|Cabin+Sketch|Kaushan+Script" rel="stylesheet">
   <script src='https://api.mapbox.com/mapbox-gl-js/v0.38.0/mapbox-gl.js'></script>
   <link href='https://api.mapbox.com/mapbox-gl-js/v0.38.0/mapbox-gl.css' rel='stylesheet'/>
@@ -69,42 +66,43 @@
   </div>
 
   <script>
-      var countries = [];
-      var myCountries = [], myCities = [];
-      var countriesInEurope = 51, countriesInAsia = 53, countriesInAfrica = 57, countriesInNA = 36, countriesInSA = 15, countriesInOceania = 23;
-      var popUps = new Map();
+      var srcNum= 0;  //ensures same source name is never used during session
+      var countries = [];   //complete list of countries
+      var myCountries = [], myCities = [];  //user specific lists of countries and cities
+      var countriesInEurope = 51, countriesInAsia = 53, countriesInAfrica = 57, countriesInNA = 36, countriesInSA = 15, countriesInOceania = 23; // # of countries per continent for stat purposes
+      var popUps = new Map(); // map of popup objects for easy removal
 
       mapboxgl.accessToken = 'pk.eyJ1Ijoia2V2aW5pcmFjZSIsImEiOiJjajY0M2ExZDIxbm1hMzNwOHp0cWpzbjJkIn0.g_KHQKSe60ViArp6hW-2TA';
 
-      var map = new mapboxgl.Map({
+      var map = new mapboxgl.Map({    // map object from Mapbox GL JS API
           container: 'map',
           style: 'mapbox://styles/kevinirace/cj65fkrkf67yv2qp0ik49zqeg',
           center: [10, 20],
           zoom: 2,
           interactive: true,
-          minZoom: 2
+          minZoom: 2,
+          preserveDrawingBuffer: true
       });
 
       map.scrollZoom.disable();
       map.addControl(new mapboxgl.NavigationControl());
 
-      map.on('style.load', function () {
+      map.on('style.load', function () {    // once style loads, retrieve complete list of countries
         $.get("/getCountries", function(data){
                 if(data !== null){  countries = data; }
-                populateList();
-                initializeMap(function(){
+                populateList();     //  populate the selection list w countrie names
+                initializeMap(function(){     //  make all country layers invisible before retrieving user data
                   retrieveData();
                 });
         });
       });
 
-      function retrieveData(){
+      function retrieveData(){    // retrieve user data
         $.get("/getData", function(data){
-          console.log(data);
                 if(data.countryList !== null){
                   myCountries = data.countryList;
                   let user_countries = data.countryList;
-                  for(i = 0; i < user_countries.length; i++){
+                  for(i = 0; i < user_countries.length; i++){   // set visited country layers to visible
                     map.setLayoutProperty(user_countries[i], 'visibility', 'visible');
                   }
                   setStats();
@@ -112,24 +110,23 @@
                 if(data.cityList !== null){
                   myCities = data.cityList;
                   let user_cities = data.cityList;
-                  for(x = 0; x < user_cities.length; x++){
+                  for(x = 0; x < user_cities.length; x++){    // create circle markers for visited cities
                     initializeCity(user_cities[x]);
                   }
                 }
-                google.charts.load("current", {packages:["corechart"]});
+                google.charts.load("current", {packages:["corechart"]});  // build stat chart
                 google.charts.setOnLoadCallback(drawChart);
-
         });
       }
 
-      function initializeMap(callback){
+      function initializeMap(callback){     // sets all country layers to invisible
         for (x = 0; x < countries.length; x++){
           map.setLayoutProperty(countries[x][0], 'visibility', 'none');
         }
         callback();
       }
 
-      function toggleCountry(country){
+      function toggleCountry(country){    // when selection is made, toggles country layer between visible and invisible and updates user data accordingly
         var visibility = map.getLayoutProperty(country, 'visibility');
         if (visibility === 'visible') {
             map.setLayoutProperty(country, 'visibility', 'none');
@@ -146,7 +143,7 @@
         setStats();
       }
 
-      function populateList(){
+      function populateList(){    // builds selection list with all country names
         var list = document.getElementById('myUL');
         for (x = 0; x < countries.length; x++){
           var item = document.createElement('li');
@@ -162,7 +159,7 @@
         }
       }
 
-      function getVisitedCountries(continent){
+      function getVisitedCountries(continent){    // returns number of visited countries per continent (and the list of them)
         let numVisited = 0;
         let countryNames = [];
         for(let y = 0; y < countries.length; y++){
@@ -175,7 +172,7 @@
         return result;
       }
 
-      function buildList() {
+      function buildList() {    // builds list of filtered country names based on user input
           var input, filter, ul, li, a, i;
           input = document.getElementById('myInput');
           filter = input.value.toUpperCase();
@@ -204,38 +201,36 @@
         }
       }
 
-      function updateCountryDB(action, country){
+      function updateCountryDB(action, country){    // send action (String) and country (String) to server for purpose of building database query string
         $.post( "/updateCountryDB", {action: action, country: country});
-        console.log('UPDATING COUNTRY');
       }
 
-      function updateCityDB(action, city){
+      function updateCityDB(action, city){    // send action (String) and city (String) to server for purpose of building database query string
         $.post( "/updateCityDB", {action: action, city: city});
-        console.log('UPDATING CITY');
       }
 
-      function setStats(){
+      function setStats(){    // update the # of countries and # of cities visited
         let cityStat = document.getElementById('cityCount');
         let countryStat = document.getElementById('countryCount');
         countryStat.innerHTML = myCountries.length.toString() + ' different countries.';
         cityStat.innerHTML = myCities.length.toString() + ' cities in ';
       }
 
-      function inputCity(){
-        console.log('GETTING CITY');
+      function inputCity(){     // add marker to map for inputted city, update user data accordingly
         let input = document.getElementById('cityInput');
         let val = input.value;
         let message = document.getElementById('message');
         message.innerHTML = "";
         $.get("/addCity", {city: val}, function(data){
-          console.log('GOT CITY', data);
+          console.log('SUCCESS: ', data);
           if(data == null || data.features.length < 1){
             message.innerHTML = "Not Found, Try Again.";
             return;
           }
           let coordinates = data.features[0].geometry.coordinates;
           let name = data.features[0].place_name;
-          var pointName = name.concat("-point"); //just in case name of a Country is entered (don't want to mix up layer names)
+          var pointName = name + "-point-" + srcNum; // ensures unique source/layer id from all other city/country ids
+          srcNum++;
           if(myCities.indexOf(name) > -1){
             return;
           }
@@ -248,7 +243,7 @@
         });
       }
 
-      function initializeCity(query){
+      function initializeCity(query){   // add city markers to map during map initialization (no list or database updating)
         $.get("/addCity", {city: query}, function(data){
           if(data.features.length < 1){
             message.innerHTML = "Not Found, Try Again.";
@@ -256,13 +251,14 @@
           }
           let coordinates = data.features[0].geometry.coordinates;
           let name = data.features[0].place_name;
-          var pointName = name.concat("-point"); //just in case name of a Country is entered (don't want to mix up layer names)
+          var pointName = name + "-point-" + srcNum; //just in case name of a Country is entered (don't want to mix up layer names)
+          srcNum++;
           addCity(name, pointName, coordinates);
           setStats();
         });
       }
 
-      function removeCity(name, pointName){
+      function removeCity(name, pointName){ //   remove source data for city, remove city from user's city list, remove popup using map
         map.getSource(pointName).setData({
             "type": "FeatureCollection",
             "features": []
@@ -276,7 +272,7 @@
         updateCityDB('REMOVE', name);
       }
 
-      function addCity(name, pointName, coordinates){
+      function addCity(name, pointName, coordinates){   // creates and adds city marker + associated popup box to map object
         map.addSource(pointName, {
              type: 'geojson',
              data: {
@@ -323,7 +319,7 @@
         });
       }
 
-      function setCountryList(list){
+      function setCountryList(list){ // sets list of countries visited per continent in Stat Area
         let cList = document.getElementById('cList');
         cList.innerHTML = '';
         for(i = 0; i < list.length; i++){
@@ -333,7 +329,7 @@
         }
       }
 
-      function drawChart() {
+      function drawChart() { // creates Pie Chart using Google Chart API
         var selector = document.getElementById('selector');
         var currentContinent = selector.value;
         var totalCountries;
